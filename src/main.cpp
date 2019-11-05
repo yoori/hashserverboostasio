@@ -435,7 +435,7 @@ main(int argc, char* argv[])
   {
     // parse options
     short listen_port = 10000;
-    unsigned int threads = 1;
+    unsigned int threads = std::min(std::thread::hardware_concurrency(), 12);
 
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
@@ -451,6 +451,12 @@ main(int argc, char* argv[])
       boost::program_options::command_line_parser(argc, argv).options(desc).run(),
       vm);
     boost::program_options::notify(vm); // store values into variables
+
+    if(vm.count("help"))
+    {
+      std::cout << desc << std::endl;
+      return 0;
+    }
 
     // start asio
     boost::asio::io_service io_service;
