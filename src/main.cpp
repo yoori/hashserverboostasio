@@ -435,7 +435,7 @@ main(int argc, char* argv[])
   {
     // parse options
     short listen_port = 10000;
-    unsigned int threads = std::min(std::thread::hardware_concurrency(), 12);
+    unsigned int threads = std::max(std::min(std::thread::hardware_concurrency(), 12u), 1u);
 
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
@@ -452,16 +452,12 @@ main(int argc, char* argv[])
       vm);
     boost::program_options::notify(vm); // store values into variables
 
-    if(vm.count("help"))
-    {
-      std::cout << desc << std::endl;
-      return 0;
-    }
-
     // start asio
     boost::asio::io_service io_service;
     boost::asio::signal_set signals{io_service, SIGUSR1};
     signals.async_wait(std::bind(&boost::asio::io_service::stop, &io_service));
+
+    std::cout << "Start on port " << listen_port << " with " << threads << " threads" << std::endl;
 
     Server s(io_service, listen_port);
     std::list<std::thread> io_threads;
@@ -478,7 +474,7 @@ main(int argc, char* argv[])
   }
   catch (const std::exception& e)
   {
-    std::cerr << "Exception: " << e.what() << "\n";
+    std::cerr << "error: " << e.what() << "\n";
     return 1;
   }
 
